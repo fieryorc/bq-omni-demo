@@ -107,14 +107,14 @@ function error_exit()
 # Script starts here.
 # ------------------------------------------------
 
-save_file=$PWD/omni-quickstart.info
+save_file=$PWD/omni-aws-demo.info
 
 aws_key=
 aws_secret=
 aws_session_token=
 aws_account_id=
-aws_policy=omni-quickstart
-aws_role=omni-quickstart
+aws_policy=omni-aws-demo
+aws_role=omni-aws-demo
 aws_s3_bucket=
 aws_s3_path=
 aws_s3_file_format=
@@ -131,13 +131,13 @@ init_defaults()
 {
     db_put gcp_location "aws-us-east-1"
     if [ -z "$(db_get gcp_connection)" ]; then
-        db_put gcp_connection omni-quickstart-conn
+        db_put gcp_connection omni-aws-demo-conn
     fi
     if [ -z "$(db_get gcp_dataset)" ]; then
-        db_put gcp_dataset omni_quickstart
+        db_put gcp_dataset omni_aws_demo
     fi
     if [ -z "$(db_get gcp_external_table)" ]; then
-        db_put gcp_external_table quickstart_table
+        db_put gcp_external_table aws_demo_table
     fi
     if [ -z "$(db_get aws_s3_file_format)" ]; then
         db_put aws_s3_file_format "PARQUET"
@@ -273,7 +273,7 @@ EOF
     log "creating aws iam policy $aws_policy with $(cat /tmp/$aws_policy.json)"
     exec_cmd aws iam create-policy --policy-name "$aws_policy" \
         --policy-document file:///tmp/"$aws_policy.json" \
-        --description "access to s3 bucket - created by omni quickstart script"
+        --description "access to s3 bucket - created by omni-aws-demo script"
     exec_cmd rm -f /tmp/$aws_policy.json
     status "aws iam policy $aws_policy created"
 }
@@ -307,7 +307,7 @@ EOF
     exec_cmd aws iam create-role --role-name "$aws_role" \
         --assume-role-policy-document file:///tmp/${aws_role}-trust-policy.json \
         --max-session-duration 43200 \
-        --description "Omni quickstart role to access s3 bucket - created by omni-quickstart script"
+        --description "Omni aws demo role to access s3 bucket - created by omni-aws-demo script"
     status "aws iam role $aws_role created"
 }
 
@@ -327,7 +327,7 @@ function gcp_create_dataset()
     log "creating dataset $gcp_dataset"
     exec_cmd bq --project_id=$gcp_project --location=$gcp_location mk --dataset \
         --default_table_expiration 86400 \
-        --description "created by omni quickstart script" \
+        --description "created by omni-aws-demo script" \
         "$gcp_project:$gcp_dataset"
     status "dataset '$gcp_dataset' created"
 }

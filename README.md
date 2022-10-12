@@ -1,5 +1,5 @@
 # BigQuery Omni AWS Demo
-This quickstart script provides easy way to connect BigQuery Omni to the
+This demo script provides easy way to connect BigQuery Omni to the
 AWS S3 dataset and run a query one it. This automates creating AWS roles/policies, 
 Omni connection, dataset and external tables.
 
@@ -18,7 +18,9 @@ Using this script you will be able to create an external table to connect to AWS
 Run the following command:
 
 ```
-curl -L https://raw.githubusercontent.com/fieryorc/bq-omni-demo/main/aws-demo.sh | bash
+curl -L https://raw.githubusercontent.com/fieryorc/bq-omni-demo/main/omni-aws-demo.sh -o /tmp/omni-aws-demo.sh && \
+    chmod 755 /tmp/omni-aws-demo.sh && \
+    /tmp/omni-aws-demo.sh
 ```
 
 This will run the script and do the following:
@@ -35,5 +37,5 @@ The script will print the progress as it executes. If for any reason the script 
 rerun the script. User input is cached so you don't have to re-enter the values (instead press enter).
 
 ## Cleanup
-Script stores all the user inputs in the cache file `aws-demo.info` in the current directory.
+Script stores all the user inputs in the cache file `omni-aws-demo.info` in the current directory.
 Delete this file if you no longer would like to cache the inputs.
