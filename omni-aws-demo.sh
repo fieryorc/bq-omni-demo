@@ -398,6 +398,7 @@ function main()
     gcp_create_external_table
     gcp_query_external_table
     status "congratulations! all done! detailed log: $log_file"
+    status "You can launch cloud console to run more queries: https://pantheon.corp.google.com/bigquery?project=$gcp_project"
 }
 
 main

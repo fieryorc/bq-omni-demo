@@ -5,6 +5,7 @@ Omni connection, dataset and external tables.
 
 Using this script you will be able to create an external table to connect to AWS S3 dataset.
 
+
 ## Prerequisites to run the demo
 1. AWS Account ID
 2. AWS Access Key
@@ -37,6 +38,14 @@ This script will do the following:
 
 The script will print the progress as it executes. If for any reason the script fails, you can
 rerun the script. User input is cached so you don't have to re-enter the values (instead press enter).
+
+
+## Next steps
+You can open cloud console, launch bigquery SQL page and run more queries on the external table created.
+Also, you can create more external table using the same connection created by the demo script.
+
+[BigQuery Omni Documentation](https://cloud.google.com/bigquery/docs/omni-aws-introduction)
+
 
 ## Cleanup
 Script stores all the user inputs in the cache file `omni-aws-demo.info` in the current directory.
