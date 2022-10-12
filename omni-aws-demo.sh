@@ -48,17 +48,20 @@ function mycmd() {
 
 function log()
 {
-    echocolor --green "[$(date +%H:%M:%S)] $@"
+    echo "I[$(date +%H:%M:%S)] $@" >>$log_file
 }
 
 function log_warning()
 {
-    echocolor --warning "[$(date +%H:%M:%S)] $@"
+    echocolor --yellow "[$(date +%H:%M:%S)] $@"
+    echo "W[$(date +%H:%M:%S)] $@" >>$log_file
 }
 
 function log_error()
 {
-    echocolor --error "[$(date +%H:%M:%S)] $@"
+    echo "E[$(date +%H:%M:%S)] $@" >>$log_file
+    echocolor --lred "[$(date +%H:%M:%S)] $@"
+    echocolor --lred "log file: $log_file"
 }
 
 function status() {
@@ -108,6 +111,7 @@ function error_exit()
 # ------------------------------------------------
 
 save_file=$PWD/omni-aws-demo.info
+log_file=$PWD/omni-aws-demo.log
 
 aws_key=
 aws_secret=
@@ -129,6 +133,11 @@ gcp_external_table=
 
 init_defaults()
 {
+    if [ -f "$log_file" ]; then
+        mv -f $log_file $log_file.old
+    fi
+    status "using log file: $log_file"
+
     db_put gcp_location "aws-us-east-1"
     if [ -z "$(db_get gcp_connection)" ]; then
         db_put gcp_connection omni-aws-demo-conn
@@ -178,10 +187,10 @@ function read_var()
 
 function install_aws_cli() {
     if which aws; then
-        echo 'aws cli already installed. skipping.'
+        status 'aws cli already installed. skipping.'
         return
     fi
-    
+    status "installing aws cli"
     exec_cmd pushd /tmp
     exec_cmd curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     exec_cmd_suppress unzip awscliv2.zip
@@ -195,12 +204,13 @@ function get_gcp_info()
     read_var gcp_connection "Connection name"
     read_var gcp_external_table "External table name"
 
-    status "project: ${gcp_project}, dataset: ${gcp_dataset}, connection: ${gcp_connection}"
+    log "project: ${gcp_project}, dataset: ${gcp_dataset}, connection: ${gcp_connection}"
 }
 
 function init_gcp_project()
 {
     # Enable bigquery API
+    status "enabling bigquery service in ${gcp_project}"
     exec_cmd gcloud services enable --project "$gcp_project" bigquery.googleapis.com
 }
 
@@ -223,12 +233,14 @@ function get_s3_bucket_info()
     read_var aws_s3_path "S3 object path (ex., foo/baz/*)"
     read_var aws_s3_file_format "File format (Supported: PARQUET, JSON, AVRO)"
 
+    status "validating s3 credentials ..."
     exec_cmd_suppress aws s3 ls "$aws_s3_bucket/${aws_s3_path%%\*}"
     status "s3 credentials verified"
 }
 
 function create_gcp_resources()
 {
+    status "creating bigquery connection ..."
     local output=
     output=$(bq --format=prettyjson show --connection --project_id=$gcp_project --location=$gcp_location $gcp_connection)
     if [ $? -ne 0 ]; then
@@ -250,6 +262,7 @@ function create_gcp_resources()
 function create_aws_policy()
 {
     # Create aws role policy
+    status "creating aws policy to allow bigquery connection access ..."
     if aws iam get-policy --policy-arn "arn:aws:iam::$aws_account_id:policy/$aws_policy" >/dev/null 2>&1; then
         status "aws policy '$aws_policy' already exists"
         return
@@ -283,6 +296,7 @@ EOF
 
 function create_aws_role()
 {
+    status "creating aws role ..."
     if aws iam get-role --role-name "$aws_role" >/dev/null 2>&1; then
         status "aws role '$aws_role' already exists"
         return
@@ -311,17 +325,22 @@ EOF
         --assume-role-policy-document file:///tmp/${aws_role}-trust-policy.json \
         --max-session-duration 43200 \
         --description "Omni aws demo role to access s3 bucket - created by omni-aws-demo script"
+    # Wait for IAM role propagate
+    exec_cmd sleep 10
     status "aws iam role $aws_role created"
 }
 
 function attach_role_policy()
 {
+    status "attaching aws role policy ..."
     exec_cmd aws iam attach-role-policy --role-name "$aws_role" \
         --policy-arn "arn:aws:iam::$aws_account_id:policy/$aws_policy"
+    status "aws role policy attached"
 }
 
 function gcp_create_dataset()
 {
+    status "creating gcp dataset ${gcp_dataset} ..."
     if bq --project_id=$gcp_project show --dataset $gcp_dataset >/dev/null 2>&1; then
         log "dataset '$gcp_dataset' already exists"
         return
@@ -337,6 +356,7 @@ function gcp_create_dataset()
 
 function gcp_create_external_table()
 {
+    status "creating omni external table $gcp_dataset.$gcp_external_table ..."
     if bq --project_id=$gcp_project show $gcp_dataset.$gcp_external_table >/dev/null 2>&1; then
         status "external table '$gcp_dataset.$gcp_external_table' already exists"
         return
@@ -357,6 +377,7 @@ function gcp_create_external_table()
 function gcp_query_external_table()
 {
     local query="SELECT COUNT(*) FROM \`$gcp_project.$gcp_dataset.$gcp_external_table\`"
+    status "running query: $query"
     exec_cmd bq --project_id=$gcp_project query --use_legacy_sql=false "$query"
     status "successfully ran query: $query"
 }
@@ -376,7 +397,7 @@ function main()
     gcp_create_dataset
     gcp_create_external_table
     gcp_query_external_table
-    status "congratulations! all done!"
+    status "congratulations! all done! detailed log: $log_file"
 }
 
 main
