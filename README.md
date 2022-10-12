@@ -15,7 +15,9 @@ Using this script you will be able to create an external table to connect to AWS
 
 
 ## Running the script
-Run the following command:
+1. Open [cloud console shell](https://console.cloud.google.com/welcome?cloudshell=true)
+2. Select the GCP project
+3. Run the following command in the cloud shell:
 
 ```
 curl -L https://raw.githubusercontent.com/fieryorc/bq-omni-demo/main/omni-aws-demo.sh -o /tmp/omni-aws-demo.sh && \
@@ -23,7 +25,7 @@ curl -L https://raw.githubusercontent.com/fieryorc/bq-omni-demo/main/omni-aws-de
     /tmp/omni-aws-demo.sh
 ```
 
-This will run the script and do the following:
+This script will do the following:
 
 1. Connect to AWS and verify access
 2. Enable BigQuery APIs in GCP

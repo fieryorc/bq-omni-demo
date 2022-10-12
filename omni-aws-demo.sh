@@ -188,6 +188,22 @@ function install_aws_cli() {
     exec_cmd_suppress sudo ./aws/install
 }
 
+function get_gcp_info()
+{
+    read_var gcp_project "GCP Project"
+    read_var gcp_dataset "Dataset name"
+    read_var gcp_connection "Connection name"
+    read_var gcp_external_table "External table name"
+
+    status "project: ${gcp_project}, dataset: ${gcp_dataset}, connection: ${gcp_connection}"
+}
+
+function init_gcp_project()
+{
+    # Enable bigquery API
+    exec_cmd gcloud services enable --project "$gcp_project" bigquery.googleapis.com
+}
+
 function get_aws_credentials() 
 {
     read_var aws_account_id "AWS account id"
@@ -211,21 +227,8 @@ function get_s3_bucket_info()
     status "s3 credentials verified"
 }
 
-function get_gcp_info()
-{
-    read_var gcp_project "GCP Project"
-    read_var gcp_dataset "Dataset name"
-    read_var gcp_connection "Connection name"
-    read_var gcp_external_table "External table name"
-
-    status "project: ${gcp_project}, dataset: ${gcp_dataset}, connection: ${gcp_connection}"
-}
-
 function create_gcp_resources()
 {
-    # Enable bigquery API
-    exec_cmd gcloud services enable --project "$gcp_project" bigquery.googleapis.com
-
     local output=
     output=$(bq --format=prettyjson show --connection --project_id=$gcp_project --location=$gcp_location $gcp_connection)
     if [ $? -ne 0 ]; then
@@ -362,9 +365,10 @@ function main()
 {
     init_defaults
     install_aws_cli
+    get_gcp_info
+    init_gcp_project
     get_aws_credentials
     get_s3_bucket_info
-    get_gcp_info
     create_gcp_resources
     create_aws_policy
     create_aws_role
